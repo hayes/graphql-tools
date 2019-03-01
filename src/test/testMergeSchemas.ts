@@ -601,15 +601,9 @@ bookingById(id: "b1") {
 }
   `;
 
-        const propertyResult = await graphql(
-          propertySchema,
-          `query { ${propertyFragment} }`,
-        );
+        const propertyResult = await graphql(propertySchema, `query { ${propertyFragment} }`);
 
-        const bookingResult = await graphql(
-          bookingSchema,
-          `query { ${bookingFragment} }`,
-        );
+        const bookingResult = await graphql(bookingSchema, `query { ${bookingFragment} }`);
 
         const mergedResult = await graphql(
           mergedSchema,
@@ -687,14 +681,11 @@ bookingById(id: "b1") {
         let notificationCnt = 0;
         subscribe(mergedSchema, subscription)
           .then(results => {
-            forAwaitEach(
-              results as AsyncIterable<ExecutionResult>,
-              (result: ExecutionResult) => {
-                expect(result).to.have.property('data');
-                expect(result.data).to.deep.equal(mockNotification);
-                !notificationCnt++ ? done() : null;
-              },
-            ).catch(done);
+            forAwaitEach(results as AsyncIterable<ExecutionResult>, (result: ExecutionResult) => {
+              expect(result).to.have.property('data');
+              expect(result.data).to.deep.equal(mockNotification);
+              !notificationCnt++ ? done() : null;
+            }).catch(done);
           })
           .catch(done);
 
@@ -741,17 +732,14 @@ bookingById(id: "b1") {
         let notificationCnt = 0;
         subscribe(mergedSchema, subscription)
           .then(results => {
-            forAwaitEach(
-              results as AsyncIterable<ExecutionResult>,
-              (result: ExecutionResult) => {
-                expect(result).to.have.property('data');
-                expect(result).to.have.property('errors');
-                expect(result.errors).to.have.lengthOf(1);
-                expect(result.errors).to.deep.equal(expectedResult.errors);
-                expect(result.data).to.deep.equal(expectedResult.data);
-                !notificationCnt++ ? done() : null;
-              },
-            ).catch(done);
+            forAwaitEach(results as AsyncIterable<ExecutionResult>, (result: ExecutionResult) => {
+              expect(result).to.have.property('data');
+              expect(result).to.have.property('errors');
+              expect(result.errors).to.have.lengthOf(1);
+              expect(result.errors).to.deep.equal(expectedResult.errors);
+              expect(result.data).to.deep.equal(expectedResult.data);
+              !notificationCnt++ ? done() : null;
+            }).catch(done);
           })
           .catch(done);
 
@@ -1377,15 +1365,7 @@ bookingById(id: "b1") {
             loneExtend,
             localSubscriptionSchema,
           ],
-          resolvers: [
-            Scalars,
-            Enums,
-            PropertyResolvers,
-            LinkResolvers,
-            Query1,
-            Query2,
-            AsyncQuery,
-          ],
+          resolvers: [Scalars, Enums, PropertyResolvers, LinkResolvers, Query1, Query2, AsyncQuery],
         });
 
         const mergedResult = await graphql(
@@ -1504,15 +1484,9 @@ bookingById(id: "b1") {
 }
   `;
 
-        const propertyResult = await graphql(
-          propertySchema,
-          `query { ${propertyFragment} }`,
-        );
+        const propertyResult = await graphql(propertySchema, `query { ${propertyFragment} }`);
 
-        const bookingResult = await graphql(
-          bookingSchema,
-          `query { ${bookingFragment} }`,
-        );
+        const bookingResult = await graphql(bookingSchema, `query { ${bookingFragment} }`);
 
         const mergedResult = await graphql(
           mergedSchema,
@@ -2282,13 +2256,9 @@ fragment BookingFragment on Booking {
           'Description of AnotherNewScalar.',
         );
 
-        expect(mergedSchema.getType('TestingScalar').description).to.equal(
-          'A type that uses TestScalar.',
-        );
+        expect(mergedSchema.getType('TestingScalar').description).to.equal('A type that uses TestScalar.');
 
-        expect(mergedSchema.getType('Color').description).to.equal(
-          'A type that uses an Enum.',
-        );
+        expect(mergedSchema.getType('Color').description).to.equal('A type that uses an Enum.');
 
         expect(mergedSchema.getType('NumericEnum').description).to.equal(
           'A type that uses an Enum with a numeric constant.',
@@ -2305,21 +2275,15 @@ fragment BookingFragment on Booking {
 
       it('should parse descriptions on new fields', () => {
         const Query = mergedSchema.getQueryType();
-        expect(Query.getFields().linkTest.description).to.equal(
-          'A new field on the root query.',
-        );
+        expect(Query.getFields().linkTest.description).to.equal('A new field on the root query.');
 
         const Booking = mergedSchema.getType('Booking') as GraphQLObjectType;
-        expect(Booking.getFields().property.description).to.equal(
-          'The property of the booking.',
-        );
+        expect(Booking.getFields().property.description).to.equal('The property of the booking.');
 
         const Property = mergedSchema.getType('Property') as GraphQLObjectType;
         const bookingsField = Property.getFields().bookings;
         expect(bookingsField.description).to.equal('A list of bookings.');
-        expect(bookingsField.args[0].description).to.equal(
-          'The maximum number of bookings to retrieve.',
-        );
+        expect(bookingsField.args[0].description).to.equal('The maximum number of bookings to retrieve.');
       });
 
       it('should allow defining new types in link type', async () => {
@@ -2681,18 +2645,24 @@ fragment BookingFragment on Booking {
 
         const resolvers = {
           Query: {
-            book: () => ({ category: 'Test' })
-          }
+            book: () => ({ category: 'Test' }),
+          },
         };
 
         schema = mergeSchemas({
           schemas: [schema],
-          resolvers
+          resolvers,
         });
 
         const result = await graphql(
           schema,
-          `{ book { cat: category } }`,
+          `
+            {
+              book {
+                cat: category
+              }
+            }
+          `,
         );
 
         expect(result.data.book.cat).to.equal('Test');
@@ -2718,19 +2688,84 @@ fragment BookingFragment on Booking {
 
         const resolvers = {
           Query: {
-            book: () => ({ category: 'Test' })
-          }
+            book: () => ({ category: 'Test' }),
+          },
         };
 
         const schema = mergeSchemas({
           schemas: [propertySchema, typeDefs],
-          resolvers
+          resolvers,
         });
 
         const deprecatedUsages = findDeprecatedUsages(schema, parse(query));
         expect(deprecatedUsages).not.empty;
         expect(deprecatedUsages.length).to.equal(1);
-        expect(deprecatedUsages.find(error => Boolean(error && error.message.match(/deprecated/) && error.message.match(/yolo/))));
+        expect(
+          deprecatedUsages.find(error =>
+            Boolean(error && error.message.match(/deprecated/) && error.message.match(/yolo/)),
+          ),
+        );
+      });
+    });
+
+    describe('scalars without executable schema', () => {
+      it('works with context', async () => {
+        const BookSchema = `
+          type Book {
+            name: String
+          }
+        `;
+
+        const AuthorSchema = `
+          type Query {
+            book: Book
+          }
+
+          type Author {
+            name: String
+          }
+
+          type Book {
+            author: Author
+          }
+        `;
+
+        const resolvers = {
+          Query: {
+            book: () => ({
+              author: {
+                name: 'JRR Tolkien',
+              },
+            }),
+          },
+        };
+
+        const result = await graphql(
+          mergeSchemas({ schemas: [BookSchema, AuthorSchema], resolvers }),
+          `
+            query {
+              book {
+                author {
+                  name
+                }
+              }
+            }
+          `,
+          {},
+          {
+            test: 'Foo',
+          },
+        );
+
+        expect(result).to.deep.equal({
+          data: {
+            book: {
+              author: {
+                name: 'JRR Tolkien',
+              },
+            },
+          },
+        });
       });
     });
   });
